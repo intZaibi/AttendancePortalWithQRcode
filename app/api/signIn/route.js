@@ -36,9 +36,6 @@ export async function POST(req) {
     
     // Set the token in a cookie
     return NextResponse.json({ message: "Login successful", role: user.role }, {
-      status: 200
-    });
-    return NextResponse.json({ message: "Login successful", role: user.role }, {
       status: 200,
       headers: { 'Set-Cookie': `token=${token}; Path=/; Max-Age=86400;` },
     });
