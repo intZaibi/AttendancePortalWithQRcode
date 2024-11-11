@@ -28,7 +28,7 @@ export default function Navbar() {
   return (
     <>
       {!isAdminPage && (
-        <div className={`lg:block fixed md:hidden w-[17vw] right-0 lg:left-0 transition-all duration-300 ease-in-out transform ${menu ? 'translate-x-0 opacity-100' : 'translate-x-[200%] opacity-0 lg:translate-x-0 lg:opacity-100'}`}>
+        <div className={`lg:block fixed md:hidden w-[40vw] right-0 lg:left-0 transition-all duration-300 ease-in-out transform ${menu ? 'translate-x-0 opacity-100' : 'translate-x-[200%] opacity-0 lg:translate-x-0 lg:opacity-100'}`}>
           <Sidebar />
         </div>
       )}
