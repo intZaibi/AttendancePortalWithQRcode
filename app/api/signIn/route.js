@@ -32,7 +32,6 @@ export async function POST(req) {
 
     // Generate a JWT
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    console.log('sending response from server:', user)
     
     // Set the token in a cookie
     return NextResponse.json({ message: "Login successful", role: user.role }, {
