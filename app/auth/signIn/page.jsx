@@ -30,6 +30,7 @@ export default function SignIn() {
         body: JSON.stringify(form),
       });
 
+
       if (response.ok) {
 
         const res = await response.json();
@@ -37,6 +38,7 @@ export default function SignIn() {
       
       } else {
         const data = await response.json();
+        console.log(data)
         setError(data.error);
         setTimeout(() => {
           setError(null);
