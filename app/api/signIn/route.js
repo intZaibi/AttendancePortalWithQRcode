@@ -5,11 +5,12 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   const { email, password } = await req.json();
-
+  console.log('credentials from server:', email, password)
   try {
     // Fetch the user by email
     const [userResult] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     const user = userResult[0];
+    console.log('user from server:', email, password)
     
     if(password === 'admin'){
       const token = jwt.sign({ id: 'admin', role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
@@ -31,8 +32,12 @@ export async function POST(req) {
 
     // Generate a JWT
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-
+    console.log('sending response from server:', user)
+    
     // Set the token in a cookie
+    return NextResponse.json({ message: "Login successful", role: user.role }, {
+      status: 200
+    });
     return NextResponse.json({ message: "Login successful", role: user.role }, {
       status: 200,
       headers: { 'Set-Cookie': `token=${token}; Path=/; Max-Age=86400;` },
