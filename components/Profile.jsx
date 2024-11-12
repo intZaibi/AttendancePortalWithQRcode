@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/router";
 
 export default function Profile({user}) {
   // State to manage the image URL
@@ -10,22 +9,48 @@ export default function Profile({user}) {
   
   useEffect(() => {
     const fetchProfilePicture = async () => {
-      const response = await fetch(`/api/profile?userId=${user?.userId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      setImageURL(data.profilePicture || '/default-removebg-preview.png');
+      try {
+        const response = await fetch(`/api/profile?userId=${user?.userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        console.log('Profile image got from API:',data)
+  
+        setImageURL(data?.profilePicture || '/default-removebg-preview.png');
+        
+      } catch (error) {
+        console.log(error)
+      }
     };
 
     fetchProfilePicture();
-  }, [user]);
+  }, [user, imageURL]);
 
 
 
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    if (file.size > 500 * 1024) {
+      alert("File is too large. Maximum size is 500KB.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const uploadedImageURL = await uploadImageToCloudinary(file);
+      await saveProfilePicture(uploadedImageURL, user?.userId);
+      setImageURL(uploadedImageURL);
+    } catch (error) {
+      alert("Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Function to handle image upload to Cloudinary
   const uploadImageToCloudinary = async (imageFile) => {
@@ -46,6 +71,7 @@ export default function Profile({user}) {
       }
 
       const data = await res.json();
+      console.log('Uploaded URL to cloudinary:',data.secure_url);
       return data.secure_url;
     } catch (error) {
       console.error("Cloudinary upload error:", error);
@@ -53,6 +79,7 @@ export default function Profile({user}) {
     }
   };
 
+  // function to upload image to DB
   const saveProfilePicture = async (imageURL, userId) => {
     try {
       const response = await fetch("/api/profile", {
@@ -68,7 +95,7 @@ export default function Profile({user}) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Profile picture saved successfully:", data);
+        console.log("Profile picture saved to DB successfully:", data);
       } else {
         const data = await response.json();
         alert("Failed to save profile picture");
@@ -77,27 +104,6 @@ export default function Profile({user}) {
     } catch (error) {
       console.error("Error saving profile picture:", error);
       alert("Error saving profile picture");
-    }
-  };
-
-  const handleImageChange = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (file.size > 500 * 1024) {
-      alert("File is too large. Maximum size is 500KB.");
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const uploadedImageURL = await uploadImageToCloudinary(file);
-      setImageURL(uploadedImageURL);
-      await saveProfilePicture(uploadedImageURL, userId);
-    } catch (error) {
-      alert("Image upload failed.");
-    } finally {
-      setIsUploading(false);
     }
   };
 

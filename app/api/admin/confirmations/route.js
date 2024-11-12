@@ -79,11 +79,11 @@ export async function POST(req){
   }
 
 
-
+  console.log('Date got from client side for updating:',date)
 
   try {
     const res = await db.query('UPDATE attendance SET status = ? WHERE user_id = ? AND date = ?', [status, user_id, date ])  
-    
+    console.log('response after uploading to DB:',res)
     if (res[0].affectedRows > 0) {
       return NextResponse.json({ message: 'Attendance confirmed successfully.' }, { status: 201 });
     }
@@ -91,7 +91,7 @@ export async function POST(req){
 
   } catch (error) {
     
-    console.log(error)
+    console.log('error while uploading to DB:',error)
     return NextResponse.json({ message: error }, { status: 200 })
   }
 }

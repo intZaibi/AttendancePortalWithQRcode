@@ -6,10 +6,10 @@ export async function GET(req) {
   const urlParams = new URLSearchParams(url.split('?')[1]); 
   const userId = urlParams.get('userId');
 
+  console.log('userId in profile get api:', userId)
+  
   if (!userId) {
-    console.log(error)
-
-    return NextResponse.json({message: 'Invalid request'}, { status: 500 });
+    return NextResponse.json({message: 'Invalid request: userId not found.'}, { status: 500 });
     }
 
   try {
@@ -17,18 +17,21 @@ export async function GET(req) {
       'SELECT profile_picture FROM users WHERE id = ?',
       [userId]
     );
+    console.log(res[0][0])
 
-    if(!res[0][0].profile_picture)
+    if(!res[0][0]?.profile_picture)
       return NextResponse.json({ message: 'Image Not Found' }, { status: 404 });
-    return NextResponse.json({ profilePicture: res[0][0].profile_picture }, { status: 201 });
+    return NextResponse.json({ profilePicture: res[0][0]?.profile_picture }, { status: 201 });
   } catch (error) {
-    console.log(error)
+    console.log('error while fetching profile pic from db:',error)
     return NextResponse.json({ error }, { status: 400 });
   }
 }
 
 export async function POST(req) {
   const {imageURL, userId} = await req.json();
+  console.log('ImageURL and userId in profile post api:', userId, imageURL)
+
 
   if (!imageURL || !userId) {
     console.log('Invalid request')
@@ -37,10 +40,11 @@ export async function POST(req) {
     }
 
     try {
-      await db.query(
+      const res = await db.query(
         'UPDATE users SET profile_picture = ? WHERE id = ?',
         [imageURL, userId]
       );
+      console.log(res[0][0])
       return NextResponse.json({ message: 'Image uploaded successfully' }, { status: 201 });
     } catch (error) {
       console.log(error)

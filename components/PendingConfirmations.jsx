@@ -14,7 +14,7 @@ export default function PendingConfirmations() {
         }
       });
       const data = await response.json();
-      console.log(data.data)
+
       setData(data.data);
       };
 
@@ -36,7 +36,7 @@ export default function PendingConfirmations() {
         })
       })
       const response = await res.json()
-      console.log(response.message)
+      console.log('Response got from API after updating attendance:',response.message)
       if(res.ok){
         setData(prevData => prevData.filter(item => !((item.user_id == user_id) && (item.date == date))));
         setMessage({ type: 'success', text: 'Attendance Confirmed Successfully.'})
@@ -49,7 +49,7 @@ export default function PendingConfirmations() {
 
     } catch (error) {
       
-      console.log(error)
+      console.log('got error from API while updating:',error)
       setMessage({ type: 'error', text: error})
 
       setTimeout(() => {
