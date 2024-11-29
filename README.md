@@ -44,7 +44,7 @@ DB_PASS=your-database-password
 DB_NAME=database-name
 JWT_SECRET=your-jwt-secret
 NEXT_PUBLIC_BASE_URL=base-url
-PORT=your-preferred-port
+DB_PORT=your-preferred-port
 ```
 
 ### 4. Designing DataBase
