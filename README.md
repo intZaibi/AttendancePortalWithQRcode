@@ -181,7 +181,7 @@ DELIMITER ;
 ### 5. Run the Application
 
 ```bash
-cd attendance-portal
+cd AttendancePortal
 npm run dev
 
 ```
