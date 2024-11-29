@@ -40,7 +40,7 @@ Create a `.env` file in the backend folder and add the following configuration:
 ```
 DB_HOST=your-database-host
 DB_USER=your-database-user
-DB_PASS=your-database-password
+DB_PASSWORD=your-database-password
 DB_NAME=database-name
 JWT_SECRET=your-jwt-secret
 NEXT_PUBLIC_BASE_URL=base-url
