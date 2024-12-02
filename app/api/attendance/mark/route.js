@@ -2,25 +2,19 @@ import { NextResponse } from 'next/server';
 import db from '../../../../lib/db';
 
 export async function POST(req) {
-    const { userId, date, status } = await req.json();
+    const { uuid, date, userId } = await req.json();
+    console.log('userId:', userId)
+
+    if (typeof uuid == 'undefined') {
+        return NextResponse.json({error: 'uuid is undefined'},{status:500})
+    }
 
     try {
-        const [workingDays] = await db.query('SELECT date FROM working_days');
+        const resp = await db.query('SELECT uuid FROM qrcode WHERE uuid = ?', [uuid]);
         
-        const isWorkingDay = workingDays.filter((day) => day.date === date );
-
-        if(isWorkingDay.toString() === '')
-            return NextResponse.json({ message: 'Not a working day' }, { status: 400 });
-
-        // Check if attendance for the user on this date already exists
-        const [existingAttendance] = await db.query(
-            'SELECT * FROM attendance WHERE user_id = ? AND date = ?',
-            [userId, date]
-        );
-
-        if (existingAttendance.length > 0) {
-            console.log('Attendance already marked for today.');
-            return NextResponse.json({ message: 'Attendance already marked for today.' }, { status: 400 });
+        if (!(resp[0].length > 0)) {
+            console.log('Fake QR Code!!!');
+            return NextResponse.json({ message: 'Something went wrong!!!' }, { status: 400 });
         }
 
         // Check if the user has requested leave for this date
@@ -34,21 +28,14 @@ export async function POST(req) {
             return NextResponse.json({ message: 'User has requested leave for this date.' }, { status: 400 });
         }
 
-        if(status === 'Late') {
-            await db.query(
-                'INSERT INTO attendance (user_id, date, status) VALUES (?, ?, ?)',
-                [userId, date, 'latePending']
-            );
-        } else {
             await db.query(
                 'INSERT INTO attendance (user_id, date) VALUES (?, ?)',
                 [userId, date]
             );
-        }
-
+            console.log('done')
         return NextResponse.json({ message: 'Attendance marked successfully.' }, { status: 201 });
     } catch (error) {
         console.log('error:', error);
-        return NextResponse.json({ message: 'Unable to mark attendance.' }, { status: 500 });
+        return NextResponse.json({ error }, { status: 500 });
     }
 }

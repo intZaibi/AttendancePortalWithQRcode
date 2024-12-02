@@ -1,29 +1,49 @@
+
 "use client";
 import React, { useState, useEffect } from "react";
 
-export default function ViewRecords({user}) {
-  const [data, setData] = useState([])
-
-  // State for search input
-  const [searchQuery, setSearchQuery] = useState("");
-  const [attendanceSummary, setAttendanceSummary] = useState({});
-  const [grade, setGrade] = useState('');
+export default function ViewRecords({ user }) {
+  const [data, setData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [attendanceSummary, setAttendanceSummary] = useState({
+    presents: 0,
+    leaves: 0,
+    absents: 0,
+    late: 0,
+  });
+  const [grade, setGrade] = useState(null);
   const [presents, setPresents] = useState(0);
   const [late, setlate] = useState(0);
   const [leaves, setLeaves] = useState(0);
   const [absents, setAbsents] = useState(0);
-  const [fromDate, setFromDate] = useState(""); // State to store 'from' date
-  const [toDate, setToDate] = useState(""); // State to store 'to' date
-  const [isMounted, setIsMounted] = useState(false); // State to store 'to' date
-  const [isMonthSelected, setIsMonthSelected] = useState(false); // State to store 'to' date
-  const [isRangeSelected, setIsRangeSelected] = useState(false); // State to store 'to' date
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  const [isMounted, setIsMounted] = useState(false); // state to check if mounted
+  const [isMonthSelected, setIsMonthSelected] = useState(false);
+  const [isRangeSelected, setIsRangeSelected] = useState(false);
 
+  useEffect(() => {
+    setIsMounted(true); // Make sure this runs only on the client
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) fetchAttendanceRecords(); // Fetch data only after component is mounted
+  }, [selectedMonth, toDate]);
+
+  useEffect(() => {
+    setAttendanceSummary({ presents, leaves, absents, late });
+  }, [absents, presents, leaves, late]);
+
+  useEffect(() => {
+    const result = calculateGrade(attendanceSummary.presents);
+    setGrade(result);
+  }, [attendanceSummary]);
 
   const fetchAttendanceRecords = async () => {
     let url = `/api/records?userId=${user.userId}`;
 
-    if (searchQuery) {
-      url += `&searchQuery=${searchQuery}`;
+    if (selectedMonth) {
+      url += `&selectedMonth=${selectedMonth}`;
     } else if (fromDate && toDate) {
       url += `&fromDate=${fromDate}&toDate=${toDate}`;
     }
@@ -37,7 +57,7 @@ export default function ViewRecords({user}) {
       });
 
       const result = await res.json();
-      
+
       if (result) {
         // Process attendance data
         const presentsData = result.presents?.map((attendance) => new Date(attendance.date).toISOString().split('T')[0]);
@@ -49,15 +69,12 @@ export default function ViewRecords({user}) {
         });
 
         const workingDaysData = result.workingDays?.map((wd) => new Date(wd.date).toISOString().split('T')[0]);
-        
-        // Determine the attendance status for each working day
+
         const detailedData = workingDaysData?.map((date) => {
           const isPresent = presentsData.includes(date);
           const islate = lateData.includes(date);
-          const isLeave = leavesData.some(
-            (leave) => date >= leave.start && date <= leave.end
-          );
-          const isAbsent = (!isPresent && !islate) && !isLeave;
+          const isLeave = leavesData.some((leave) => date >= leave.start && date <= leave.end);
+          const isAbsent = !isPresent && !islate && !isLeave;
 
           return {
             date,
@@ -86,15 +103,6 @@ export default function ViewRecords({user}) {
     }
   };
 
-  useEffect(() => {
-    setIsMounted(true);
-    if (isMounted) fetchAttendanceRecords();
-  }, [searchQuery, toDate]);
-
-  useEffect(() => {
-    setAttendanceSummary({ presents, leaves, absents, late });
-  }, [absents, presents, leaves, late]);
-
   const calculateGrade = (presentDays) => {
     if (presentDays >= 26) return 'A';
     if (presentDays >= 20) return 'B';
@@ -103,11 +111,6 @@ export default function ViewRecords({user}) {
     if (presentDays >= 1) return 'F';
     return 'None';
   };
-
-  useEffect(() => {
-    const result = calculateGrade(attendanceSummary.presents);
-    setGrade(result);
-  }, [attendanceSummary]);
 
   const getGradeColor = (grade) => {
     switch (grade) {
@@ -120,6 +123,10 @@ export default function ViewRecords({user}) {
     }
   };
 
+  if (!isMounted) {
+    return <div className="p-6">Loading...</div>; // Ensure rendering happens only after mounting
+  }
+
 
   return (
     <div className="mx-auto flex flex-col p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
@@ -128,23 +135,23 @@ export default function ViewRecords({user}) {
   <div className="px-10 my-8">
     <p className="text-lg font-semibold mb-4">Overall:</p>
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-5">
+      <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
         <h3 className="text-2xl font-bold mb-2">{attendanceSummary.presents || 0}</h3>
         <p className="text-lg font-medium">Present Days</p>
       </div>
-      <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-5">
+      <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
         <h3 className="text-2xl font-bold mb-2">{attendanceSummary.absents || 0}</h3>
         <p className="text-lg font-medium">Absent Days</p>
       </div>
-      <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-5">
+      <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
         <h3 className="text-2xl font-bold mb-2">{attendanceSummary.leaves || 0}</h3>
         <p className="text-lg font-medium">Leaves</p>
       </div>
-      <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-5">
+      {/* <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-4">
         <h3 className="text-2xl font-bold mb-2">{attendanceSummary.late || 0}</h3>
         <p className="text-lg font-medium">Late</p>
-      </div>
-      <div className="flex flex-col text-center bg-[#ecf0f1] w-full p-5">
+      </div> */}
+      <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
         <h3 className={`text-2xl font-bold mb-2 ${getGradeColor(attendanceSummary.grade)}`}>{grade}</h3>
         <p className="text-lg font-medium">Grade</p>
       </div>
@@ -155,10 +162,10 @@ export default function ViewRecords({user}) {
   <div className="mb-4">
     <select
       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      value={searchQuery}
+      value={selectedMonth}
       onChange={(e) => {
         setIsMonthSelected(true);
-        setSearchQuery(e.target.value)
+        setSelectedMonth(e.target.value)
       }}
       disabled={isRangeSelected}
     >
@@ -182,7 +189,7 @@ export default function ViewRecords({user}) {
   <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
     <input
       type="date"
-      value={fromDate}
+      value={fromDate || ""}
       onChange={(e) => {setIsRangeSelected(true); setFromDate(e.target.value)}}
       className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       max={new Date().toISOString().split('T')[0]}
@@ -190,7 +197,7 @@ export default function ViewRecords({user}) {
     />
     <input
       type="date"
-      value={toDate}
+      value={toDate || ""}
       onChange={(e) => {setIsRangeSelected(true); setToDate(e.target.value)}}
       className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       max={new Date().toISOString().split('T')[0]}

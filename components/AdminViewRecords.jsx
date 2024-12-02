@@ -187,7 +187,7 @@ export default function AdminViewRecords() {
         setMessage({type: 'error', text: result?.error})
         setTimeout(() => {
           setMessage({});
-        }, 3500);
+        }, 35000);
         throw result.error
       };
       console.log("Attendance status saved:", result);
@@ -223,26 +223,26 @@ export default function AdminViewRecords() {
     <div className="mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
       <h2 className="text-2xl font-bold">Attendance Report</h2>
 
-      <div className="px-10 my-8">
+      <div className="px-16 my-8">
         <p className="text-lg font-semibold mb-4">Overall:</p>
-        <div className="flex justify-between">
-          <div className="flex flex-col text-center bg-[#ecf0f1] w-48 p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-5">
+          <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className="text-2xl font-bold mb-2">{presentDays}</h3>
             <p className="text-lg font-medium">Present Days</p>
           </div>
-          <div className="flex flex-col text-center bg-[#ecf0f1] w-48 p-5">
+          <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className="text-2xl font-bold mb-2">{absents}</h3>
             <p className="text-lg font-medium">Absent Days</p>
           </div>
-          <div className="flex flex-col text-center bg-[#ecf0f1] w-48 p-5">
+          <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className="text-2xl font-bold mb-2">{leaves}</h3>
             <p className="text-lg font-medium">Leaves</p>
           </div>
-          <div className="flex flex-col text-center bg-[#ecf0f1] w-48 p-5">
+          {/* <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className="text-2xl font-bold mb-2">{late}</h3>
             <p className="text-lg font-medium">Late</p>
-          </div>
-          <div className="flex flex-col text-center bg-[#ecf0f1] w-48 p-5">
+          </div> */}
+          <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className={`text-2xl font-bold mb-2 ${getGradeColor(grade)}`}>{grade}</h3>
             <p className="text-lg font-medium">Grade</p>
           </div>
@@ -258,18 +258,18 @@ export default function AdminViewRecords() {
           disabled={isRangeSelected}
         >
           <option value="">Select a month</option>
-          <option value="January">January</option>
-          <option value="February">February</option>
-          <option value="March">March</option>
-          <option value="April">April</option>
-          <option value="May">May</option>
-          <option value="June">June</option>
-          <option value="July">July</option>
-          <option value="August">August</option>
-          <option value="September">September</option>
-          <option value="October">October</option>
-          <option value="November">November</option>
-          <option value="December">December</option>
+          <option value="01">January</option>
+          <option value="02">February</option>
+          <option value="03">March</option>
+          <option value="04">April</option>
+          <option value="05">May</option>
+          <option value="06">June</option>
+          <option value="07">July</option>
+          <option value="08">August</option>
+          <option value="09">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
         </select>
       </div>
 
@@ -326,7 +326,6 @@ export default function AdminViewRecords() {
             <th className="px-6 py-3 text-sm font-semibold">Present Days</th>
             <th className="px-6 py-3 text-sm font-semibold">Absent Days</th>
             <th className="px-6 py-3 text-sm font-semibold">Leave Days</th>
-            <th className="px-6 py-3 text-sm font-semibold">Late Days</th>
             <th className="px-6 py-3 text-sm font-semibold">Edit Options</th>
           </tr>
         </thead>
@@ -356,13 +355,6 @@ export default function AdminViewRecords() {
                     className={`w-5 h-5 border-2 rounded-md flex justify-center items-center ${row?.leave ? "bg-gray-500 text-white" : "border-gray-300"}`}
                   >
                     {row?.leave && "✓"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  <span
-                    className={`w-5 h-5 border-2 rounded-md flex justify-center items-center ${row?.late ? "bg-yellow-500 text-white" : "border-gray-300"}`}
-                  >
-                    {row?.late && "✓"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm">
@@ -402,8 +394,7 @@ export default function AdminViewRecords() {
                 <option value="" className="text-gray-500">select an option</option>
                 <option value="present">Present</option>
                 <option value="absent">Absent</option>
-                <option value="leave">Leave</option>
-                <option value="late">Late</option>
+                {selectedRow.status !== 'present' && <option value="leave">Leave</option>}
               </select>
             </div>
             <div className="block">

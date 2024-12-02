@@ -11,12 +11,17 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "html5-qrcode": "^2.3.8",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.3",
     "next": "15.0.2",
+    "qr-code-scanner": "^1.0.8",
+    "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
+    "uuid": "^11.0.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

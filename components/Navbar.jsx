@@ -26,7 +26,7 @@ export default function Navbar() {
   }
 
   return (
-    <>
+    <div className='fixed z-10'>
       {!isAdminPage && (
         <div className={`lg:block fixed md:hidden w-[40vw] right-0 lg:left-0 transition-all duration-300 ease-in-out transform ${menu ? 'translate-x-0 opacity-100' : 'translate-x-[200%] opacity-0 lg:translate-x-0 lg:opacity-100'}`}>
           <Sidebar />
@@ -34,7 +34,7 @@ export default function Navbar() {
       )}
       
       <div className="py-5 fixed w-[100vw] bg-white lg:px-14 px-4 shadow-[260px_0_10px_#080f342f] flex justify-between items-center mb-6">
-        <Logo />
+      {isAdminPage ? ( <Logo admin={isAdminPage}/> ) : ( <Logo /> )}
         <div className="flex gap-8">
 
           <LogoutButton />
@@ -46,6 +46,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

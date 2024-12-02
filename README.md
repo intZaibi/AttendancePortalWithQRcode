@@ -52,6 +52,9 @@ DB_PORT=your-preferred-port
 In following, the sample code for MySQL database design is given. You can choose any database. 
 
 ```bash
+CREATE DATABASE attendance_portal;
+USE attendance_portal;
+
 -- Create users table
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -88,6 +91,15 @@ CREATE TABLE leave_requests (
     UNIQUE KEY unique_leave_request (user_id, start_date, end_date)
 );
 
+-- Create qrcode table
+CREATE TABLE qrcode (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(255) NOT NULL UNIQUE,
+    date DATE NOT NULL,
+    status ENUM('active', 'expired') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create total monthly_workingdays table
 CREATE TABLE monthly_workingdays (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,20 +108,11 @@ CREATE TABLE monthly_workingdays (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create individual working_days table
-CREATE TABLE working_days (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    date VARCHAR(50) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
--- Create a trigger to update_monthly_working_days to automatically count monthly working days
-
+-- Trigger to update monthly working days based on qrcode dates
 DELIMITER $$
 
 CREATE TRIGGER update_monthly_working_days
-AFTER INSERT ON defaultdb.working_days
+AFTER INSERT ON qrcode
 FOR EACH ROW
 BEGIN
     -- Extract the year and month from the inserted date
@@ -120,30 +123,47 @@ BEGIN
 
     -- Count how many rows exist for that particular year and month
     SELECT COUNT(*) INTO count_working_days
-    FROM defaultdb.working_days
-    WHERE DATE_FORMAT(date, '%Y-%m') = month_year;
+    FROM qrcode
+    WHERE DATE_FORMAT(date, '%Y-%m') = month_year AND status = 'active';
 
-    -- Check if the month already exists in the monthly_workingDays table
+    -- Check if the month already exists in the monthly_workingdays table
     SELECT COUNT(*) INTO existing_count
-    FROM defaultdb.monthly_workingdays
+    FROM monthly_workingdays
     WHERE month = month_year;
 
     -- If the month exists, update it; otherwise, insert a new record
     IF existing_count > 0 THEN
-        UPDATE defaultdb.monthly_workingdays
+        UPDATE monthly_workingdays
         SET working_days = count_working_days
         WHERE month = month_year;
     ELSE
-        INSERT INTO defaultdb.monthly_workingdays (month, working_days, created_at)
+        INSERT INTO monthly_workingdays (month, working_days, created_at)
         VALUES (month_year, count_working_days, NOW());
     END IF;
 END $$
 
 DELIMITER ;
 
-INSERT INTO working_days (date) VALUES ('2024-11-09');
+-- Trigger to expire QR codes after 10 minutes
+DELIMITER $$
 
--- Create a trigger to prevent the date overlap of leave requests
+CREATE TRIGGER expire_qrcode
+AFTER INSERT ON attendance_portal.qrcode
+FOR EACH ROW
+BEGIN
+    -- Schedule expiration after 1 minutes
+    DECLARE expiration_time TIMESTAMP;
+    SET expiration_time = DATE_ADD(NEW.created_at, INTERVAL 1 MINUTE);
+
+    IF CURRENT_TIMESTAMP >= expiration_time THEN
+        UPDATE attendance_portal.qrcode
+        SET status = 'expired'
+        WHERE id = NEW.id;
+    END IF;
+END $$
+
+DELIMITER ;
+
 
 DELIMITER $$
 
@@ -176,6 +196,24 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+
+DELIMITER $$
+
+-- Creating an event to handle QR code expiration every 1 minute
+CREATE EVENT expire_qr_codes
+ON SCHEDULE EVERY 1 MINUTE
+DO
+BEGIN
+  -- Updating status to 'expired' for QR codes older than 10 minutes
+  UPDATE qrcode
+  SET status = 'expired'
+  WHERE status = 'active'
+    AND TIMESTAMPDIFF(MINUTE, created_at, NOW()) >= 1;
+END $$
+
+DELIMITER ;
+
 ```
 
 ### 5. Run the Application

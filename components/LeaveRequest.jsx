@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const LeaveRequestPage = ({user}) => {
+const LeaveRequestPage = ({ user }) => {
   const [leaveRequest, setLeaveRequest] = useState({
     startDate: '',
     endDate: '',
@@ -12,6 +12,12 @@ const LeaveRequestPage = ({user}) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -29,7 +35,7 @@ const LeaveRequestPage = ({user}) => {
         },
         body: JSON.stringify({
           userId: user.userId,
-          ...leaveRequest
+          ...leaveRequest,
         }),
       });
 
@@ -39,37 +45,41 @@ const LeaveRequestPage = ({user}) => {
         setMessage({ type: 'success', text: data.message });
         setIsSubmitted(true);
         setTimeout(() => {
-          setMessage('');
+          setMessage(null); // Reset message correctly
           setIsSubmitted(false);
-        }, 1500);
+        }, 2500);
       } else {
         const errorData = await res.json();
         setLoading(false);
-        console.log('Error:', errorData.message)
         setMessage({ type: 'error', text: errorData.message });
         setTimeout(() => {
-          setMessage('');
+          setMessage(null); // Reset message correctly
         }, 2500);
       }
     } catch (error) {
       setLoading(false);
-      console.log('Error:', error)
-      setMessage({ type: 'error', text: error.error.message });
+      console.log('Error:', error);
+      setMessage({ type: 'error', text: error.message || 'An error occurred.' });
       setTimeout(() => {
-        setMessage('');
+        setMessage(null); // Reset message correctly
       }, 2500);
     }
   };
+
+  if (!isMounted) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
       <h2 className="text-lg font-bold mb-4">Request a Leave</h2>
 
-      {message && !loading ?  (
+      {/* Show success or error message */}
+      {message && !loading && (
         <p className={`mb-4 ${message.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
           {message.text}
         </p>
-      ): ''}
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -87,6 +97,7 @@ const LeaveRequestPage = ({user}) => {
             required
           />
         </div>
+
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
             End Date
@@ -102,6 +113,7 @@ const LeaveRequestPage = ({user}) => {
             required
           />
         </div>
+
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reason">
             Reason
@@ -115,15 +127,20 @@ const LeaveRequestPage = ({user}) => {
             required
           />
         </div>
-        <p className='text-sm my-4'>Leave will be requested for the selected date range.</p>
+
+        <p className="text-sm my-4">Leave will be requested for the selected date range.</p>
+
         <button
           className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"
+          disabled={loading}
         >
-          Request Leave
+          {loading ? 'Processing...' : 'Request Leave'}
         </button>
       </form>
-      {isSubmitted && (
+
+      {/* Show success message after submission */}
+      {isSubmitted && !loading && (
         <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
           Leave request submitted successfully!
         </div>

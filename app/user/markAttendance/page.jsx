@@ -10,7 +10,7 @@ export default function MarkAttendance() {
   // const token = Cookies.get('token');
   const router = useRouter();
   
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState('');
 
   useEffect(() => {
     // Function to fetch and verify the token
@@ -50,8 +50,8 @@ export default function MarkAttendance() {
   return (
     <div className='overflow-x-hidden'>
       <Navbar/>
-    <div className="pl-[20vw] pr-10 pt-28 w-full mx-auto">
-        <MarkAttendanceLayout user={user}/>
+    <div className="lg:pl-[20vw] lg:pr-10 pt-28 lg:w-full mx-auto">
+        {user && <MarkAttendanceLayout userId={user.userId}/>}
     </div>
     </div>
   );

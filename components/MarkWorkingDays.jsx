@@ -1,77 +1,77 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import QRCode from "qrcode";
 
 const AttendancePortal = () => {
 
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState('');
+  const [qrCodeData, setQrCodeData] = useState('');
+  const [qrCodeImage, setQrCodeImage] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const handleDateChange = (event) => {
-    setDate( event.target.value );
-  };
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
+  const handleGenerateQR = async () => {
+    setQrCodeData('');
+    const isoDate = new Date().toISOString();
+    const qrData =`Date: ${isoDate.split('T')[0]}`;
+    setQrCodeData(qrData);
+
     try {
-      const res = await fetch('/api/admin/markWorking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          date
-        }),
+
+      // Save QR data to the backend for validation
+      const response = await fetch('/api/admin/markWorking', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setLoading(false);
-        setMessage({ type: 'success', text: data.message });
+      if (response.ok) {
+        const data = await response.json()
+          setQrCodeImage(data.qrCode);
+  
+          setTimeout(()=>{
+            setQrCodeImage(null);
+          }, 15 * 60 * 1000)
       } else {
-        const errorData = await res.json();
-        setLoading(false);
-        setMessage({ type: 'error', text: errorData.message });
+        const data = await response.json();
+        throw data.message;
       }
-    } catch (error) {
-      setLoading(false);
-      setMessage({ type: 'error', text: 'An error occurred while marking working day.' });
-      console.error(error);
+      // alert('QR Code generated successfully!');
+    } catch (err) {
+      setLoading(false)
+      setMessage(err)
+      setTimeout(() => {
+        setMessage(null)
+      }, 5000);
+      console.error(`Error generating QR code: \n${err}`);
     }
   };
+
+  if (!isMounted) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
       <h2 className="text-lg font-bold mb-4">Mark Working Days</h2>
       
       {message && !loading ?  (
-        <p className={`mb-4 ${message.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
-          {message.text}
+        <p className={`mb-4 text-red-500`}>
+          {message}
         </p>
       ): ''}
 
-      <form onSubmit={handleSubmit}>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
-            {'Date: (mm/dd/yyyy)'}
-          </label>
-          <input
-            className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-            id="date"
-            type="date"
-            value={date}
-            onChange={handleDateChange}
-          />
-        </div>
-        
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          type="submit"
-        >
-          {loading ? 'Marking the day...' : "Mark"}
-        </button>
-      </form>
+      <div className='flex flex-col items-center'>
+        {qrCodeImage && (
+          <div className=''>
+            <img src={qrCodeImage} alt="QR Code" />
+            <p className='text-center'>{qrCodeData}</p>
+          </div>
+        )}
+        <button className='my-2 py-2 px-4 rounded-xl text-white hover:bg-green-600  bg-green-500' onClick={handleGenerateQR}>Generate QR Code</button>
+      </div>
 
       <div className=''>
         <p className='text-sm my-4'>The selected date will be marked as a working day.</p>

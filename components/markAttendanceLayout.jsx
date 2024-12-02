@@ -1,143 +1,182 @@
 import React, { useEffect, useState } from 'react';
+import QRScanner from 'qr-scanner';
 
-const AttendancePortal = ({user}) => {
-
-  const [username, setUsername] = useState(null);
+const MarkAttendance = ({ userId }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [isScanning, setIsScanning] = useState(false); // Track scanning state
+  const [scanner, setScanner] = useState(null); // Store scanner instance
+  const [attendanceChecked, setAttendanceChecked] = useState(false); // To track if attendance is checked
+  const [attendanceMarked, setAttendanceMarked] = useState(false); // To track if attendance is already marked
 
   useEffect(() => {
-  const fetchUsers = async () => {
-    const res = await fetch(`/api/admin/users?id=${user?.userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        },
-    })
-    const name = await res.json();
-    setUsername(name.username);
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && userId) {
+      checkAttendance(); // Check if attendance is marked when the component mounts
+    }
+  }, [isMounted]);
+
+
+  // If userId is undefined, show loading or error
+  if (!userId) {
+    return <div className="p-6">Loading userId data...</div>;
   }
 
-  fetchUsers()
-  }, [user])
-  
-
-  const [attendance, setAttendance] = useState({
-    date: new Date().toISOString().split('T')[0],
-    studentId: user?.userId,
-    status: 'Present',
-  });
-
-  const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleDateChange = (event) => {
-    setAttendance({ ...attendance, date: event.target.value });
-  };
-
-  const handleStatusChange = (value) => {
-    setAttendance({ ...attendance, status: value });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
+  // Function to check if attendance is already marked
+  const checkAttendance = async () => {
     try {
-      const res = await fetch('/api/attendance/mark', {
+      const resp = await fetch('/api/checkAttendance', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.userId,
-          date: attendance.date,
-          status: attendance.status
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setLoading(false);
-        setMessage({ type: 'success', text: data.message });
+      if (resp.ok) {
+        setAttendanceChecked(true);
       } else {
-        const errorData = await res.json();
-        setLoading(false);
-        setMessage({ type: 'error', text: errorData.message });
+        setAttendanceMarked(true);
       }
     } catch (error) {
-      setLoading(false);
-      setMessage({ type: 'error', text: 'An error occurred while marking attendance.' });
-      console.error(error);
+      console.error("Error checking attendance:", error);
+      setError(true);
     }
   };
 
+  const handleQRCodeScan = async (data) => {
+    setScanned(true);
+    const parsedData = JSON.parse(data); // Parse the QR code data
+
+    try {
+      console.log(userId);
+      console.log(scanner);
+      if (scanner) {
+        try {
+          await scanner.stop(); // Stop the scanner properly
+          setIsScanning(false); // Update scanning state
+        } catch (err) {
+          console.error("Error stopping the scanner", err);
+        }
+      }
+
+      const resp = await fetch('/api/attendance/mark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uuid: parsedData.uuid,
+          date: parsedData.date,
+          userId // Directly access userIdId from props
+        }),
+      });
+      if (resp.ok) {
+        alert('Attendance Marked Successfully!!!');
+        setSuccess(true);
+        stopScanning();
+        return;
+      } else {
+        setError(true);
+        return;
+      }
+    } catch (error) {
+      setError(true);
+      console.error("Error marking attendance:", error);
+    }
+  };
+
+  const handleQRCodeError = (error) => {
+    console.error("QR Code Scanning Error: ", error);
+  };
+
+  const startScanning = () => {
+    setIsScanning(true); // Set scanning state to true
+    if (!scanner) return;
+    // Start the QR scanner
+    scanner.start()?.catch(handleQRCodeError);
+  };
+
+  const stopScanning = () => {
+    setIsScanning(false); // Update scanning state
+    if (scanner) {
+      scanner.stop()?.catch(handleQRCodeError); // Stop the scanner
+    }
+  };
+
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const videoElement = document.getElementById('qr-reader'); // Get the video element
+    if (!videoElement) {
+      console.error('Video element not found');
+      return;
+    }
+
+    // QRScanner.WORKER_PATH = '/path/to/qr-scanner-worker.min.js'; // Specify worker path if required
+
+    const scannerInstance = new QRScanner(videoElement, handleQRCodeScan, handleQRCodeError);
+    setScanner(scannerInstance); // Store the scanner instance
+
+    // Cleanup: stop the scanner when component unmounts
+    return () => {
+      if (scannerInstance) {
+        scannerInstance.stop()?.catch(handleQRCodeError);
+      }
+    };
+  }, [isMounted]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    scanner.stop();
+    setIsScanning(false);
+  }, [scanned]);
+
+  if (!isMounted) {
+    return <div className="p-6">Loading...</div>;
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
-      <h2 className="text-lg font-bold mb-4">Mark Attendance</h2>
-      
-      {message && !loading ?  (
-        <p className={`mb-4 ${message.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
-          {message.text}
-        </p>
-      ): ''}
+    <div className="lg:max-w-2xl lg:mx-auto m-2 p-10 lg:p-8 bg-white rounded shadow-lg lg:shadow-md">
+      <h2 className="text-2xl font-bold mb-4">Mark Attendance</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <span className="block text-gray-700 text-sm font-bold mb-2">
-            Student Details:
-          </span>
-          <div className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500">
-            <div>
-              <span className='font-medium'>Name: </span>
-              {username}
-            </div>
-            <div className='mt-2'>
-              <span className='font-medium'>Id: </span>
-              {user?.userId}
-            </div>
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
-            {'Date: (mm/dd/yyyy)'}
-          </label>
-          <input
-            className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-            id="date"
-            type="date"
-            value={attendance.date}
-            onChange={handleDateChange}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="status">
-            Status:
-          </label>
-          <select
-            className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-            id="status"
-            value={attendance.status}
-            onChange={(e) => handleStatusChange(e.target.value)}
-          >
-            <option value="Present">Present</option>
-            <option value="Late">Late</option>
-          </select>
-        </div>
+      {success && (
+        <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Already attendance marked!</p>
+      )}
+      {(error || attendanceMarked) && (
+        <p className="my-10 py-5 text-center text-2xl font-bold text-red-500">{attendanceMarked ? 'Attendance already marked for today!' : 'Attendance Mark Failed!'}</p>
+      )}
 
+      {!scanned && !attendanceMarked && 
+        <div className="flex flex-col items-center pb-6">
+          <h1 className="mb-2">Scan QR Code to Mark Attendance</h1>
+            <video
+              id="qr-reader"
+              className="border-4 lg:w-[390px] w-full h-[300px] rounded-lg shadow-lg bg-white p-4"
+              style={{ width: '100%', height: 'auto' }}
+            />
+        </div>
+      }
+
+      {/* Show Start/Stop scanning buttons */}
+      {!isScanning && !scanned && !attendanceMarked ? (
         <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          type="submit"
+          onClick={startScanning}
+          className="mt-4 bg-green-500 text-white p-2 rounded"
         >
-          {loading ? 'Mark Attendance...' : "Mark Attendance"}
+          Start Scanning
         </button>
-      </form>
-
-      <div className=''>
-        <p className='text-sm my-4'>Attendance will be marked for the selected date according to status.</p>
-      </div>
+      ) : !scanned && !attendanceMarked && (
+        <button
+          onClick={stopScanning}
+          className="mt-4 bg-red-500 text-white p-2 rounded"
+        >
+          Stop Scanning
+        </button>
+      )}
     </div>
   );
 };
 
-export default AttendancePortal;
+export default MarkAttendance;

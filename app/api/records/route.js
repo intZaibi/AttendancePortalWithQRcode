@@ -5,7 +5,9 @@ export async function GET(req) {
     const url = req.url;
     const urlParams = new URLSearchParams(url.split('?')[1]); 
     const userId = urlParams.get('userId');
-    console.log('recordUser:',userId)
+    const month = urlParams.get('selectedMonth');
+    const fromDate = urlParams.get('fromDate');
+    const toDate = urlParams.get('toDate');
 
     if (userId == null) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -25,8 +27,23 @@ export async function GET(req) {
         'SELECT * FROM leave_requests WHERE user_id = ? ORDER BY start_date DESC',
         [userId]
       );
-      const [monthlyWorkingDays] = await db.query('SELECT * FROM monthly_workingdays');
-      const [workingDays] = await db.query('SELECT date FROM working_days');
+      const [monthlyWorkingDays] = await db.query(`SELECT * FROM monthly_workingdays`);
+      if (!month) {
+        const [workingDays] = await db.query(`
+          SELECT date
+          FROM qrcode
+          WHERE DATE(date) between ? AND ?;
+        `, [fromDate, toDate]);
+
+      return NextResponse.json({ presents, leaves, monthlyWorkingDays, workingDays, late }, { status: 200 });
+      }
+
+      const [workingDays] = await db.query(`
+        SELECT date 
+        FROM qrcode 
+        WHERE MONTH(date) = ? 
+          AND YEAR(date) = 2024
+      `, [month]);
 
       return NextResponse.json({ presents, leaves, monthlyWorkingDays, workingDays, late }, { status: 200 });
     } catch (error) {
