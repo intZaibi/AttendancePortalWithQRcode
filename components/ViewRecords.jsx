@@ -214,7 +214,7 @@ export default function ViewRecords({ user }) {
           <th className="px-6 py-3 text-sm font-semibold">Present Days</th>
           <th className="px-6 py-3 text-sm font-semibold">Absent Days</th>
           <th className="px-6 py-3 text-sm font-semibold">Leave Days</th>
-          <th className="px-6 py-3 text-sm font-semibold">Late Days</th>
+          {/* <th className="px-6 py-3 text-sm font-semibold">Late Days</th> */}
         </tr>
       </thead>
       <tbody>
@@ -243,13 +243,13 @@ export default function ViewRecords({ user }) {
                   {row.leave && "✓"}
                 </span>
               </td>
-              <td className="px-6 py-4 text-sm">
+              {/* <td className="px-6 py-4 text-sm">
                 <span
                   className={`w-5 h-5 border-2 rounded-md flex justify-center items-center ${row.late ? "bg-yellow-500 text-white" : "border-gray-300"}`}
                 >
                   {row.late && "✓"}
                 </span>
-              </td>
+              </td> */}
             </tr>
           ))
         ) : (

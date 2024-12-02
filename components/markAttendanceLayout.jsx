@@ -4,10 +4,12 @@ import QRScanner from 'qr-scanner';
 const MarkAttendance = ({ userId }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [isScanning, setIsScanning] = useState(false); // Track scanning state
   const [scanner, setScanner] = useState(null); // Store scanner instance
+  // const [videoStream, setVideoStream] = useState(null); // Store scanner instance
+  // const [hasPermission, setHasPermission] = useState(false); // Store scanner instance
   const [attendanceChecked, setAttendanceChecked] = useState(false); // To track if attendance is checked
   const [attendanceMarked, setAttendanceMarked] = useState(false); // To track if attendance is already marked
 
@@ -35,15 +37,16 @@ const MarkAttendance = ({ userId }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       });
-
+      const result = resp.json()
       if (resp.ok) {
         setAttendanceChecked(true);
       } else {
-        setAttendanceMarked(true);
+        console.log(result.error);
+        setError(result.error);
       }
     } catch (error) {
       console.error("Error checking attendance:", error);
-      setError(true);
+      typeof error !== 'object' ? setError(error) : setError('Error checking attendance')
     }
   };
 
@@ -78,11 +81,13 @@ const MarkAttendance = ({ userId }) => {
         stopScanning();
         return;
       } else {
-        setError(true);
+        const result = await resp.json();
+        if(result.message === 'QR code expired!!!')
+          alert('QR code expired!!!');
+        setError('QR code expired!!!');
         return;
       }
     } catch (error) {
-      setError(true);
       console.error("Error marking attendance:", error);
     }
   };
@@ -91,19 +96,48 @@ const MarkAttendance = ({ userId }) => {
     console.error("QR Code Scanning Error: ", error);
   };
 
-  const startScanning = () => {
-    setIsScanning(true); // Set scanning state to true
+  const startScanning = async () => {
     if (!scanner) return;
-    // Start the QR scanner
-    scanner.start()?.catch(handleQRCodeError);
+    setIsScanning(true); // Set scanning state to true
+    try {
+      scanner.start().catch(handleQRCodeError);  // Start the scanner and catch any errors
+    } catch (error) {
+      setError('Permission denied or camera not available. Check Camera connection, try clearing browser data or try use another browser!');
+      console.error('Error accessing camera:', error);
+    }
+
   };
 
-  const stopScanning = () => {
+  const stopScanning = async () => {
     setIsScanning(false); // Update scanning state
     if (scanner) {
       scanner.stop()?.catch(handleQRCodeError); // Stop the scanner
     }
+    setError('')
   };
+
+  // useEffect(() => {
+  //   const startStream = async ()=>{
+  //     // Request camera permission
+  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    
+  //     // Set the video stream to state so that we can render it
+  //     setVideoStream(stream);
+  //     setHasPermission(true);
+  //     setError('');
+  //   }
+  //   const stopStream = async ()=>{
+  //     if (videoStream) {
+  //     const tracks = videoStream.getTracks();
+  //     tracks.forEach(track => track.stop()); // Stop all tracks
+  //   }
+  //   setVideoStream(null);
+  //   setHasPermission(false);
+  //   setError('');
+  //   }
+  //   (isScanning && isMounted) ? startStream() : isMounted ? stopStream() : '';
+    
+  // }, [isScanning])
 
   useEffect(() => {
     if (!isMounted) return;
@@ -142,8 +176,8 @@ const MarkAttendance = ({ userId }) => {
       {success && (
         <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Attendance marked successfully!</p>
       )}
-      {(error || attendanceMarked) && (
-        <p className="my-10 py-5 text-center text-2xl font-bold text-red-500">{attendanceMarked ? 'Attendance already marked for today!' : 'Attendance Mark Failed!'}</p>
+      {error && (
+        <p className="my-10 py-5 text-center text-2xl font-bold text-red-500">{attendanceMarked ? 'Attendance already marked for today!' : error}</p>
       )}
 
       {!scanned && !attendanceMarked && 
@@ -153,7 +187,7 @@ const MarkAttendance = ({ userId }) => {
               id="qr-reader"
               className="border-4 lg:w-[390px] w-full h-[300px] rounded-lg shadow-lg bg-white p-4"
               style={{ width: '100%', height: 'auto' }}
-            />
+            ></video>
         </div>
       }
 

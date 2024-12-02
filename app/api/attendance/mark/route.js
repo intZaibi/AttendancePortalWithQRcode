@@ -3,18 +3,21 @@ import db from '../../../../lib/db';
 
 export async function POST(req) {
     const { uuid, date, userId } = await req.json();
-    console.log('userId:', userId)
 
     if (typeof uuid == 'undefined') {
         return NextResponse.json({error: 'uuid is undefined'},{status:500})
     }
 
     try {
-        const resp = await db.query('SELECT uuid FROM qrcode WHERE uuid = ?', [uuid]);
+        const resp = await db.query('SELECT uuid, status FROM qrcode WHERE uuid = ?', [uuid]);
         
         if (!(resp[0].length > 0)) {
             console.log('Fake QR Code!!!');
             return NextResponse.json({ message: 'Something went wrong!!!' }, { status: 400 });
+        }
+        if (resp[0][0].status === 'expired') {
+            console.log('QR Code Expired!!!');
+            return NextResponse.json({ message: 'QR code expired!!!' }, { status: 404 });
         }
 
         // Check if the user has requested leave for this date
@@ -32,10 +35,11 @@ export async function POST(req) {
                 'INSERT INTO attendance (user_id, date) VALUES (?, ?)',
                 [userId, date]
             );
-            console.log('done')
         return NextResponse.json({ message: 'Attendance marked successfully.' }, { status: 201 });
     } catch (error) {
         console.log('error:', error);
+        if(error.Error.include("'root'@'localhost'"))
+            return NextResponse.json({error: 'Database connection failed'}, {status:500})
         return NextResponse.json({ error }, { status: 500 });
     }
 }

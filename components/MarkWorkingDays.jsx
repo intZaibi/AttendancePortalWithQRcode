@@ -41,11 +41,15 @@ const AttendancePortal = () => {
       // alert('QR Code generated successfully!');
     } catch (err) {
       setLoading(false)
+      if(err?.message?.includes("'root'@'localhost'"))
+        setMessage('Database connection failed!!!')
+      else {
+      console.error(err);
       setMessage(err)
       setTimeout(() => {
         setMessage(null)
       }, 5000);
-      console.error(`Error generating QR code: \n${err}`);
+    }
     }
   };
 
