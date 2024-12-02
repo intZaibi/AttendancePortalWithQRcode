@@ -10,6 +10,9 @@ const MarkAttendance = ({ userId }) => {
   const [scanner, setScanner] = useState(null); // Store scanner instance
   const [attendanceChecked, setAttendanceChecked] = useState(false); // To track if attendance is checked
   const [attendanceMarked, setAttendanceMarked] = useState(false); // To track if attendance is already marked
+  const [hasPermission, setHasPermission] = useState(false); // State to track camera permission
+  const [videoStream, setVideoStream] = useState(null); // State to store video stream object
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   useEffect(() => {
     setIsMounted(true);
@@ -21,13 +24,6 @@ const MarkAttendance = ({ userId }) => {
     }
   }, [isMounted]);
 
-
-  // If userId is undefined, show loading or error
-  if (!userId) {
-    return <div className="p-6">Loading userId data...</div>;
-  }
-
-  // Function to check if attendance is already marked
   const checkAttendance = async () => {
     try {
       const resp = await fetch('/api/checkAttendance', {
@@ -51,22 +47,10 @@ const MarkAttendance = ({ userId }) => {
     setScanned(true);
     const parsedData = JSON.parse(data); // Parse the QR code data
 
-    const list = await QRScanner.listCameras(true);
-    const permissions = await QRScanner.hasCamera();
-    QRScanner.setCamera('environment');
-
-    console.log('camera permissions:', permissions, 'List:', list)
-
     try {
-      console.log(userId);
-      console.log(scanner);
       if (scanner) {
-        try {
-          await scanner.stop(); // Stop the scanner properly
-          setIsScanning(false); // Update scanning state
-        } catch (err) {
-          console.error("Error stopping the scanner", err);
-        }
+        await scanner.stop(); // Stop the scanner properly
+        setIsScanning(false); // Update scanning state
       }
 
       const resp = await fetch('/api/attendance/mark', {
@@ -75,7 +59,7 @@ const MarkAttendance = ({ userId }) => {
         body: JSON.stringify({
           uuid: parsedData.uuid,
           date: parsedData.date,
-          userId // Directly access userIdId from props
+          userId, // Directly access userIdId from props
         }),
       });
       if (resp.ok) {
@@ -119,13 +103,10 @@ const MarkAttendance = ({ userId }) => {
       console.error('Video element not found');
       return;
     }
-    
-    // QRScanner.WORKER_PATH = '/path/to/qr-scanner-worker.min.js'; // Specify worker path if required
 
     const scannerInstance = new QRScanner(videoElement, handleQRCodeScan, handleQRCodeError);
     setScanner(scannerInstance); // Store the scanner instance
-    console.log('Camera Permissions',QRScanner.hasCamera())
-    // Cleanup: stop the scanner when component unmounts
+
     return () => {
       if (scannerInstance) {
         scannerInstance.stop()?.catch(handleQRCodeError);
@@ -133,11 +114,31 @@ const MarkAttendance = ({ userId }) => {
     };
   }, [isMounted]);
 
-  useEffect(() => {
-    if (!isMounted) return;
-    scanner.stop();
-    setIsScanning(false);
-  }, [scanned]);
+  const handleCameraPermission = async () => {
+    try {
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+      // Set the video stream to state so that we can render it
+      setVideoStream(stream);
+      setHasPermission(true);
+      setErrorMessage('');
+    } catch (error) {
+      setHasPermission(false);
+      setErrorMessage('Permission denied or camera not available.');
+      console.error('Error accessing camera:', error);
+    }
+  };
+
+  const handleStopCamera = () => {
+    if (videoStream) {
+      const tracks = videoStream.getTracks();
+      tracks.forEach(track => track.stop()); // Stop all tracks
+    }
+    setVideoStream(null);
+    setHasPermission(false);
+    setErrorMessage('');
+  };
 
   if (!isMounted) {
     return <div className="p-6">Loading...</div>;
@@ -148,22 +149,42 @@ const MarkAttendance = ({ userId }) => {
       <h2 className="text-2xl font-bold mb-4">Mark Attendance</h2>
 
       {success && (
-        <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Already attendance marked!</p>
+        <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Attendance marked successfully!</p>
       )}
       {(error || attendanceMarked) && (
         <p className="my-10 py-5 text-center text-2xl font-bold text-red-500">{attendanceMarked ? 'Attendance already marked for today!' : 'Attendance Mark Failed!'}</p>
       )}
 
-      {!scanned && !attendanceMarked && 
+      {/* Show Start/Stop scanning buttons */}
+      {!scanned && !attendanceMarked && (
         <div className="flex flex-col items-center pb-6">
           <h1 className="mb-2">Scan QR Code to Mark Attendance</h1>
-            <video
-              id="qr-reader"
-              className="border-4 lg:w-[390px] w-full h-[300px] rounded-lg shadow-lg bg-white p-4"
-              style={{ width: '100%', height: 'auto' }}
-            />
+          <video
+            id="qr-reader"
+            className="border-4 lg:w-[390px] w-full h-[300px] rounded-lg shadow-lg bg-white p-4"
+            style={{ width: '100%', height: 'auto' }}
+          />
         </div>
-      }
+      )}
+
+      {/* Camera Permission Button */}
+      <div className="mt-4">
+        {!hasPermission ? (
+          <button
+            onClick={handleCameraPermission}
+            className="bg-blue-500 text-white p-2 rounded"
+          >
+            Allow Camera Access
+          </button>
+        ) : (
+          <button
+            onClick={handleStopCamera}
+            className="bg-red-500 text-white p-2 rounded"
+          >
+            Stop Camera
+          </button>
+        )}
+      </div>
 
       {/* Show Start/Stop scanning buttons */}
       {!isScanning && !scanned && !attendanceMarked ? (
@@ -181,6 +202,9 @@ const MarkAttendance = ({ userId }) => {
           Stop Scanning
         </button>
       )}
+
+      {/* Error handling */}
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
     </div>
   );
 };
