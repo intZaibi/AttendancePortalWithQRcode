@@ -140,7 +140,7 @@ const MarkAttendance = ({ userId }) => {
       <h2 className="text-2xl font-bold mb-4">Mark Attendance</h2>
 
       {success && (
-        <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Already attendance marked!</p>
+        <p className="my-10 py-5 text-center text-2xl font-bold text-green-500">Attendance marked successfully!</p>
       )}
       {(error || attendanceMarked) && (
         <p className="my-10 py-5 text-center text-2xl font-bold text-red-500">{attendanceMarked ? 'Attendance already marked for today!' : 'Attendance Mark Failed!'}</p>
