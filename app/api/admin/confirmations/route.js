@@ -36,13 +36,14 @@ export async function GET(req){
     const users = await db.query(`SELECT id, name FROM users`);
     
     const data = pendings[0].map((row) => {
+      const rowData = {...row, date: row.date.toISOString().split('T')[0]}
       const user = users[0].find((user) => user.id === row.user_id);
       return {
-        ...row,
+        ...rowData,
         name: user ? user.name : null
       };
     });
-    
+
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
 
@@ -92,6 +93,6 @@ export async function POST(req){
   } catch (error) {
     
     console.log('error while uploading to DB:',error)
-    return NextResponse.json({ message: error }, { status: 200 })
+    return NextResponse.json({ message: error.sqlMessage ? 'SQL query error: ' + error?.sqlMessage : error }, { status: 500 })
   }
 }

@@ -94,6 +94,7 @@ const LeaveRequestPage = ({ user }) => {
             value={leaveRequest.startDate}
             onChange={handleChange}
             min={new Date().toISOString().split('T')[0]}
+            max={leaveRequest.endDate}
             required
           />
         </div>
@@ -109,7 +110,7 @@ const LeaveRequestPage = ({ user }) => {
             name="endDate"
             value={leaveRequest.endDate}
             onChange={handleChange}
-            min={new Date().toISOString().split('T')[0]}
+            min={leaveRequest.startDate}
             required
           />
         </div>
