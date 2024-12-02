@@ -51,6 +51,12 @@ const MarkAttendance = ({ userId }) => {
     setScanned(true);
     const parsedData = JSON.parse(data); // Parse the QR code data
 
+    const list = await QRScanner.listCameras(true);
+    const permissions = await QRScanner.hasCamera();
+    QRScanner.setCamera('environment');
+
+    console.log('camera permissions:', permissions, 'List:', list)
+
     try {
       console.log(userId);
       console.log(scanner);
@@ -113,12 +119,12 @@ const MarkAttendance = ({ userId }) => {
       console.error('Video element not found');
       return;
     }
-
+    
     // QRScanner.WORKER_PATH = '/path/to/qr-scanner-worker.min.js'; // Specify worker path if required
 
     const scannerInstance = new QRScanner(videoElement, handleQRCodeScan, handleQRCodeError);
     setScanner(scannerInstance); // Store the scanner instance
-
+    console.log('Camera Permissions',QRScanner.hasCamera())
     // Cleanup: stop the scanner when component unmounts
     return () => {
       if (scannerInstance) {
