@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import QRScanner from 'qr-scanner';
 import { ToastContainer,toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const MarkAttendance = ({ userId }) => {
   const [isMounted, setIsMounted] = useState(false);
