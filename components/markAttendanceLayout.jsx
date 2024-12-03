@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QRScanner from 'qr-scanner';
+import { ToastContainer,toast } from 'react-toastify';
 
 const MarkAttendance = ({ userId }) => {
   const [isMounted, setIsMounted] = useState(false);
@@ -10,7 +11,6 @@ const MarkAttendance = ({ userId }) => {
   const [scanner, setScanner] = useState(null); // Store scanner instance
   // const [videoStream, setVideoStream] = useState(null); // Store scanner instance
   // const [hasPermission, setHasPermission] = useState(false); // Store scanner instance
-  const [attendanceChecked, setAttendanceChecked] = useState(false); // To track if attendance is checked
   const [attendanceMarked, setAttendanceMarked] = useState(false); // To track if attendance is already marked
 
   useEffect(() => {
@@ -37,12 +37,11 @@ const MarkAttendance = ({ userId }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       });
-      const result = resp.json()
-      if (resp.ok) {
-        setAttendanceChecked(true);
-      } else {
-        console.log(result.error);
-        setError(result.error);
+      const result = await resp.json()
+      if (result.message) {
+        setAttendanceMarked(true);
+        console.log(result.message);
+        setError(result.message);
       }
     } catch (error) {
       console.error("Error checking attendance:", error);
@@ -76,14 +75,14 @@ const MarkAttendance = ({ userId }) => {
         }),
       });
       if (resp.ok) {
-        alert('Attendance Marked Successfully!!!');
+        toast.success('Attendance Marked Successfully!!!');
         setSuccess(true);
         stopScanning();
         return;
       } else {
         const result = await resp.json();
         if(result.message === 'QR code expired!!!')
-          alert('QR code expired!!!');
+          toast.error('QR code expired!!!');
         setError('QR code expired!!!');
         return;
       }
@@ -171,6 +170,7 @@ const MarkAttendance = ({ userId }) => {
 
   return (
     <div className="lg:max-w-2xl lg:mx-auto m-2 p-10 lg:p-8 bg-white rounded shadow-lg lg:shadow-md">
+      <ToastContainer />
       <h2 className="text-2xl font-bold mb-4">Mark Attendance</h2>
 
       {success && (

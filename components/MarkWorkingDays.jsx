@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import QRCode from "qrcode";
+import { ToastContainer, toast } from 'react-toastify';
 
 const AttendancePortal = () => {
 
@@ -30,6 +30,7 @@ const AttendancePortal = () => {
       if (response.ok) {
         const data = await response.json()
           setQrCodeImage(data.qrCode);
+          toast.success('QR Code generated successfully!')
   
           setTimeout(()=>{
             setQrCodeImage(null);
@@ -46,6 +47,7 @@ const AttendancePortal = () => {
       else {
       console.error(err);
       setMessage(err)
+      toast.success('QR Code generation failed!')
       setTimeout(() => {
         setMessage(null)
       }, 5000);
@@ -59,6 +61,7 @@ const AttendancePortal = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
+      <ToastContainer />
       <h2 className="text-lg font-bold mb-4">Mark Working Days</h2>
       
       {message && !loading ?  (

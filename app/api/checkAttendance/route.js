@@ -9,14 +9,12 @@ export async function POST(req) {
     }
       
     try {
-      const today = new Date();
-      const date = today.toISOString().split('T')[0];
-        const resp = await db.query('SELECT date FROM attendance WHERE user_id = ? AND date = ?', [userId, date]);
+        const resp = await db.query('SELECT date FROM attendance WHERE user_id = ? AND DATE(date) = CURDATE()', [userId]);
         if (resp[0].length > 0) {
           
-          return NextResponse.json({ message: 'Attendance already marked!' }, { status: 500 });
+          return NextResponse.json({ message: 'Attendance already marked!' }, { status: 200 });
         }
-        return NextResponse.json({ message: 'Attendance pending!' }, { status: 201 });
+        return NextResponse.json({ }, { status: 201 });
     } catch (error) {
 
         console.log('error:', error);

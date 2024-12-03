@@ -48,7 +48,7 @@ export async function POST(req) {
 
 
 export async function GET(req) {
-  const { error, status, userId, role } = await verifyToken(req);
+  const { error, status, userId, role } = verifyToken(req);
 
   if (error) {
     return NextResponse.json({ error }, { status });
