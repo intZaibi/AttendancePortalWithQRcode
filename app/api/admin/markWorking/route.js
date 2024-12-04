@@ -13,7 +13,7 @@ export async function GET(){
       // If Qr Code is active
       if(res[0].length > 0 && res[0][0]?.status === 'active'){
         const qrData = { uuid: res[0][0].uuid, date: date.toISOString().split('T')[0] }
-        const qrCode = await QRCode.toDataURL(JSON.stringify(qrData, {width: 320}));
+        const qrCode = await QRCode.toDataURL(JSON.stringify(qrData, {width: 700}));
         
         return NextResponse.json({ qrCode }, { status: 200 });
       } else if(res[0].length > 0 && res[0][0]?.status === 'expired') {
