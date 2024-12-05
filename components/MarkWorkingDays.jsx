@@ -10,20 +10,28 @@ const AttendancePortal = () => {
   const [qrCodeImage, setQrCodeImage] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [newId, setNewId] = useState(0);
+  const [counter, setCounter] = useState(0);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     setIsMounted(true);
 
-    // Initial data fetch
-    fetchData();
-    // Set up polling every 5 seconds
+    // Set up polling after a time interval
     const intervalId = setInterval(() => {
-      fetchData();
-    }, 5000); // Poll every 5 seconds
+      setCounter(prevCounter => prevCounter + 1)
+    }, 3000); // Poll time
 
     // Cleanup on component unmount
     return () => clearInterval(intervalId);
   }, []); // Empty dependency array ensures the effect runs only once
+
+  useEffect(()=>{
+    fetchData();
+  }, [counter])
+  
+  useEffect(()=>{
+    toast(`Roll no: ${toastMessage.user_id}, ${toastMessage.name} has marked the attendance!`);
+  }, [toastMessage])
 
   // Function to fetch data from the API
   const fetchData = async () => {
@@ -38,13 +46,26 @@ const AttendancePortal = () => {
       if (!response.ok) throw new Error('Failed to check new attendance');
       const result = await response.json();
       if (result.message === 'yes') {
-        // Using a functional update to ensure the latest value is used
+        //generating toasts for each student and Using a functional update to ensure the latest value is used
         setNewId((prevId) => {
-          if (result.newId !== prevId) {
-            toast(`Roll no: ${result.studentId}, ${result.studentName} has marked the attendance!`);
+          if (result.newLastId !== prevId) {
+            result.markedStudents.forEach((student) => {
+              // Find the student name by matching user_id with names.id
+              const studentName = result.names.find((nameObj) => nameObj.id === student.user_id)?.name;
+              
+              // If a name is found, toast the message
+              if (studentName) {
+                setToastMessage({user_id: student.user_id, name: studentName})
+                // toast(`Roll no: ${student.user_id}, ${studentName} has marked the attendance!`);
+              } else {
+                // Optionally handle the case where the name is not found
+                console.error(`Name for user_id ${student.user_id} not found!`);
+              }
+            });
           }
-          return result.newId;
+          return result.newLastId;
         });
+        
       }
       setLoading(false);
     } catch (err) {
