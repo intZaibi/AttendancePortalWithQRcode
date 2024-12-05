@@ -82,10 +82,11 @@ const MarkAttendance = ({ userId }) => {
         return;
       } else {
         const result = await resp.json();
-        if(result.message === 'QR code expired!!!')
+        if(result.message === 'QR code expired!!!'){
           toast.error('QR code expired!!!');
-        setError('QR code expired!!!');
-        return;
+          setError('QR code expired!!!');
+          return;
+        }
       }
     } catch (error) {
       console.error("Error marking attendance:", error);
