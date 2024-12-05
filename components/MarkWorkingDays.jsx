@@ -35,7 +35,7 @@ const AttendancePortal = () => {
   
           setTimeout(()=>{
             setQrCodeImage(null);
-          }, 15 * 60 * 1000)
+          }, 60 * 1000)
       } else {
         const data = await response.json();
         throw data.message;
@@ -48,10 +48,10 @@ const AttendancePortal = () => {
       else {
       console.error(err);
       setMessage(err)
-      toast.success('QR Code generation failed!')
+      toast.error('QR Code generation failed!')
       setTimeout(() => {
         setMessage(null)
-      }, 5000);
+      }, 10000);
     }
     }
   };
@@ -61,9 +61,9 @@ const AttendancePortal = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded shadow-md">
+    <div className="p-4 md:p-6 bg-white rounded shadow-md">
       <ToastContainer />
-      <h2 className="text-lg font-bold mb-4">Mark Working Days</h2>
+      <h2 className="text-xl font-bold mb-4">Attendance</h2>
       
       {message && !loading ?  (
         <p className={`mb-4 text-red-500`}>
@@ -74,15 +74,15 @@ const AttendancePortal = () => {
       <div className='flex flex-col items-center'>
         {qrCodeImage && (
           <div className=''>
-            <img src={qrCodeImage} alt="QR Code" />
+            <img src={qrCodeImage} alt="QR Code" width={700}/>
             <p className='text-center'>{qrCodeData}</p>
           </div>
         )}
-        <button className='my-2 py-2 px-4 rounded-xl text-white hover:bg-green-600  bg-green-500' onClick={handleGenerateQR}>Generate QR Code</button>
+        <button className='my-2 py-2 px-4 rounded-xl text-lg text-white hover:bg-green-600  bg-green-500' onClick={handleGenerateQR}>Start Roll Call</button>
       </div>
 
       <div className=''>
-        <p className='text-sm my-4'>The selected date will be marked as a working day.</p>
+        {qrCodeImage ? <p className='text-lg my-4'>Please scan the QR code!</p> : <p className='text-lg my-4'>Get ready for roll call !!!</p>}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/AdminSidebar";
 import MarkWorkingDays from "@/components/MarkWorkingDays";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 

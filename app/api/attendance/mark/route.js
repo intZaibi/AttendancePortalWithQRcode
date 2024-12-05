@@ -35,10 +35,18 @@ export async function POST(req) {
                 'INSERT INTO attendance (user_id, date) VALUES (?, ?)',
                 [userId, date]
             );
-        return NextResponse.json({ message: 'Attendance marked successfully.' }, { status: 201 });
+            
+            const studentName = await db.query(
+                'SELECT name FROM users WHERE id = ?',
+                [userId]
+            );
+
+            // Notify admin
+
+        return NextResponse.json({ studentName, message: 'Attendance marked successfully.' }, { status: 201 });
     } catch (error) {
         console.log('error:', error);
-        if(error.Error.include("'root'@'localhost'"))
+        if(error?.Error?.include("'root'@'localhost'"))
             return NextResponse.json({error: 'Database connection failed'}, {status:500})
         return NextResponse.json({ error }, { status: 500 });
     }

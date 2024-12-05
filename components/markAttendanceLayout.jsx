@@ -72,7 +72,7 @@ const MarkAttendance = ({ userId }) => {
         body: JSON.stringify({
           uuid: parsedData.uuid,
           date: parsedData.date,
-          userId // Directly access userIdId from props
+          userId // Directly access userId from props
         }),
       });
       if (resp.ok) {
@@ -115,29 +115,6 @@ const MarkAttendance = ({ userId }) => {
     }
     setError('')
   };
-
-  // useEffect(() => {
-  //   const startStream = async ()=>{
-  //     // Request camera permission
-  //     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    
-  //     // Set the video stream to state so that we can render it
-  //     setVideoStream(stream);
-  //     setHasPermission(true);
-  //     setError('');
-  //   }
-  //   const stopStream = async ()=>{
-  //     if (videoStream) {
-  //     const tracks = videoStream.getTracks();
-  //     tracks.forEach(track => track.stop()); // Stop all tracks
-  //   }
-  //   setVideoStream(null);
-  //   setHasPermission(false);
-  //   setError('');
-  //   }
-  //   (isScanning && isMounted) ? startStream() : isMounted ? stopStream() : '';
-    
-  // }, [isScanning])
 
   useEffect(() => {
     if (!isMounted) return;
