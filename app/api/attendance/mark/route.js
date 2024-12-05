@@ -36,14 +36,7 @@ export async function POST(req) {
                 [userId, date]
             );
             
-            const studentName = await db.query(
-                'SELECT name FROM users WHERE id = ?',
-                [userId]
-            );
-
-            // Notify admin
-
-        return NextResponse.json({ studentName, message: 'Attendance marked successfully.' }, { status: 201 });
+        return NextResponse.json({ message: 'Attendance marked successfully.' }, { status: 201 });
     } catch (error) {
         console.log('error:', error);
         if(error?.Error?.include("'root'@'localhost'"))
