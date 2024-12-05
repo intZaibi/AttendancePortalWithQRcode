@@ -98,7 +98,7 @@ const AttendancePortal = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 bg-white rounded shadow-md">
+    <div className="p-4 text-center md:p-6 bg-white rounded shadow-md">
       <ToastContainer />
       <h2 className="text-xl font-bold mb-4">Attendance</h2>
       
@@ -120,7 +120,7 @@ const AttendancePortal = () => {
         </button>
       </div>
 
-      <div className=''>
+      <div className=' text-center'>
         {qrCodeImage ? <p className='text-lg my-4'>Please scan the QR code!</p> : <p className='text-lg my-4'>Get ready for roll call !!!</p>}
       </div>
     </div>
