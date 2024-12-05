@@ -30,7 +30,9 @@ const AttendancePortal = () => {
   }, [counter])
   
   useEffect(()=>{
-    toast(`Roll no: ${toastMessage.user_id}, ${toastMessage.name} has marked the attendance!`);
+    if (isMounted) {
+      toast(`Roll no: ${toastMessage.user_id}, ${toastMessage.name} has marked the attendance!`);
+    }
   }, [toastMessage])
 
   // Function to fetch data from the API
