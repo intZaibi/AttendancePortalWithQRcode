@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '../../../../lib/db';
 
 export async function POST(req) {
-    const { userId, startDate, endDate, reason } = await req.json();
+    const { userId, startDate, endDate, reason, leaveType } = await req.json();
 
     try {
 
@@ -24,7 +24,7 @@ export async function POST(req) {
 
       await db.query(
         'INSERT INTO leave_requests (user_id, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?)',
-        [userId, startDate, endDate, reason, 'pending']
+        [userId, startDate, endDate, (reason ? reason : leaveType), 'pending']
       );
 
       return NextResponse.json({ message: 'Leave request has submitted.' }, { status: 201 });

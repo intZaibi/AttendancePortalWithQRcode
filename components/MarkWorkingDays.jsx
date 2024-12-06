@@ -31,7 +31,7 @@ const AttendancePortal = () => {
   
   useEffect(()=>{
     if (isMounted) {
-      toast(`Roll no: ${toastMessage.user_id}, ${toastMessage.name} has marked the attendance!`);
+      toast.success(`🔥 Roll no: ${toastMessage.user_id} \n "${toastMessage.name}" has marked the attendance!`);
     }
   }, [toastMessage])
 

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react'
 import LogoutButton from './LogoutBtn'
 import Logo from './Logo'
-import Link from 'next/link'
 import Sidebar from './Sidebar'
 
 export default function Navbar() {

@@ -6,6 +6,7 @@ const LeaveRequestPage = ({ user }) => {
   const [leaveRequest, setLeaveRequest] = useState({
     startDate: '',
     endDate: '',
+    leaveType: '',
     reason: '',
   });
 
@@ -82,9 +83,10 @@ const LeaveRequestPage = ({ user }) => {
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Start Date */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="startDate">
-            Start Date
+            Start Date <span className='text-red-500'>*</span>
           </label>
           <input
             className="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -99,9 +101,10 @@ const LeaveRequestPage = ({ user }) => {
           />
         </div>
 
+        {/* End Date */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
-            End Date
+            End Date <span className='text-red-500'>*</span>
           </label>
           <input
             className="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -115,19 +118,42 @@ const LeaveRequestPage = ({ user }) => {
           />
         </div>
 
+        {/* Leave Type */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reason">
-            Reason
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="leaveType">
+            Leave Type <span className='text-red-500'>*</span>
           </label>
-          <textarea
-            className="bg-gray-200 min-h-32 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            id="reason"
-            name="reason"
-            value={leaveRequest.reason}
+          <select
+            id="leaveType"
+            name="leaveType"
+            value={leaveRequest.leaveType}
             onChange={handleChange}
+            className="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             required
-          />
+          >
+            <option value="">Select Leave Type</option>
+            <option value="Sick leave">Sick leave</option>
+            <option value="Urgent work">Urgent work</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
+
+        {/* Reason Textarea (only if "Other" is selected) */}
+        {leaveRequest.leaveType === 'Other' && (
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reason">
+              Reason <span className='text-red-500'>*</span>
+            </label>
+            <textarea
+              className="bg-gray-200 min-h-32 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              id="reason"
+              name="reason"
+              value={leaveRequest.reason}
+              onChange={handleChange}
+              required={leaveRequest.leaveType === 'Other'}
+            />
+          </div>
+        )}
 
         <p className="text-sm my-4">Leave will be requested for the selected date range.</p>
 
