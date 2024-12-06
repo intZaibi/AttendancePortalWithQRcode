@@ -11,6 +11,7 @@ export default function ViewRecords({ user }) {
     absents: 0,
     late: 0,
   });
+  const [totalWorkingDays, setTotalWorkingDays] = useState(0);
   const [grade, setGrade] = useState(null);
   const [presents, setPresents] = useState(0);
   const [late, setlate] = useState(0);
@@ -68,8 +69,9 @@ export default function ViewRecords({ user }) {
           return { start, end };
         });
 
-        const workingDaysData = result.workingDays?.map((wd) => new Date(wd.date).toISOString().split('T')[0]);
+        setTotalWorkingDays(result.workingDays.length);
 
+        const workingDaysData = result.workingDays?.map((wd) => new Date(wd.date).toISOString().split('T')[0]);
         const detailedData = workingDaysData?.map((date) => {
           const isPresent = presentsData.includes(date);
           const islate = lateData.includes(date);
@@ -104,11 +106,12 @@ export default function ViewRecords({ user }) {
   };
 
   const calculateGrade = (presentDays) => {
-    if (presentDays >= 26) return 'A';
-    if (presentDays >= 20) return 'B';
-    if (presentDays >= 15) return 'C';
-    if (presentDays >= 10) return 'D';
-    if (presentDays >= 1) return 'F';
+    console.log('Percentage:', ((presentDays/totalWorkingDays)*100))
+    if (((presentDays/totalWorkingDays)*100) >= 90) return 'A';
+    if (((presentDays/totalWorkingDays)*100) >= 85) return 'B';
+    if (((presentDays/totalWorkingDays)*100) >= 80) return 'C';
+    if (((presentDays/totalWorkingDays)*100) >= 75) return 'D';
+    if (((presentDays/totalWorkingDays)*100) >= 1) return 'F';
     return 'None';
   };
 
