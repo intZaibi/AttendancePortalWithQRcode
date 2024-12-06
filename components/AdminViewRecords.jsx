@@ -15,6 +15,7 @@ export default function AdminViewRecords() {
   const [isRangeSelected, setIsRangeSelected] = useState(false); // State to handle all users report
   const [isMounted, setIsMounted] = useState(false); // State to handle all users report
   const [attendanceStatus, setAttendanceStatus] = useState("");
+  const [totalWorkingDays, setTotalWorkingDays] = useState(0);
   const [presentDays, setPresents] = useState(0);
   const [late, setLate] = useState(0);
   const [leaves, setLeaves] = useState(0);
@@ -37,14 +38,19 @@ export default function AdminViewRecords() {
     fetchUsers();
   }, []);
 
+  useEffect(()=>{
+    const grade = calculateGrade(presentDays);
+        setGrade(grade);
+  }, [presentDays])
+
   // Function to calculate the grade based on present days
   const calculateGrade = (presentDays) => {
-    if (presentDays >= 26) return 'A';
-    if (presentDays >= 20) return 'B';
-    if (presentDays >= 15) return 'C';
-    if (presentDays >= 10) return 'D';
-    if (presentDays >=  1) return 'F';
-    if (presentDays ===  0 && (absents || leaves || late)) return 'F';
+    if (((presentDays/totalWorkingDays)*100) >= 90) return 'A';
+    if (((presentDays/totalWorkingDays)*100) >= 85) return 'B';
+    if (((presentDays/totalWorkingDays)*100) >= 80) return 'C';
+    if (((presentDays/totalWorkingDays)*100) >= 75) return 'D';
+    if (((presentDays/totalWorkingDays)*100) >=  1) return 'F';
+    // if (presentDays ===  0 && (absents || leaves || late)) return 'F';
     return 'None';
   };
 
@@ -66,7 +72,7 @@ export default function AdminViewRecords() {
         },
       });
       const result = await res?.json();
-
+      setTotalWorkingDays(result.workingDays.length);
       if(result?.error){
         throw result.error
       }
@@ -113,8 +119,6 @@ export default function AdminViewRecords() {
         setLate(lateCount);
         setLeaves(leaveCount);
         setAbsents(absentCount);
-        const grade = calculateGrade(presentCount);
-        setGrade(grade);
 
       }
     } catch (error) {
