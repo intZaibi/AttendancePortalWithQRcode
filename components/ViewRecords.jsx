@@ -106,24 +106,15 @@ export default function ViewRecords({ user }) {
   };
 
   const calculateGrade = (presentDays) => {
-    console.log('Percentage:', ((presentDays/totalWorkingDays)*100))
-    if (((presentDays/totalWorkingDays)*100) >= 90) return 'A';
-    if (((presentDays/totalWorkingDays)*100) >= 85) return 'B';
-    if (((presentDays/totalWorkingDays)*100) >= 80) return 'C';
-    if (((presentDays/totalWorkingDays)*100) >= 75) return 'D';
-    if (((presentDays/totalWorkingDays)*100) >= 1) return 'F';
+    if (((presentDays/totalWorkingDays)*100) < 75) return 'Short';
+    if (((presentDays/totalWorkingDays)*100) >= 75) return 'Okay';
     return 'None';
   };
 
   const getGradeColor = (grade) => {
-    switch (grade) {
-      case 'A': return 'text-green-500';
-      case 'B': return 'text-blue-500';
-      case 'C': return 'text-purple-500';
-      case 'D': return 'text-yellow-500';
-      case 'F': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
+    if (grade === 'Short') return 'text-red-500';
+    if (grade === 'Okay') return 'text-green-500';
+    return 'text-gray-500';
   };
 
   if (!isMounted) {
@@ -155,8 +146,8 @@ export default function ViewRecords({ user }) {
         <p className="text-lg font-medium">Late</p>
       </div> */}
       <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
-        <h3 className={`text-2xl font-bold mb-2 ${getGradeColor(attendanceSummary.grade)}`}>{grade}</h3>
-        <p className="text-lg font-medium">Grade</p>
+        <h3 className={`text-2xl font-bold mb-2 ${getGradeColor(grade)}`}>{grade}</h3>
+        <p className="text-lg font-medium">Status</p>
       </div>
     </div>
   </div>

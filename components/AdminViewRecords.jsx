@@ -41,16 +41,12 @@ export default function AdminViewRecords() {
   useEffect(()=>{
     const grade = calculateGrade(presentDays);
         setGrade(grade);
-  }, [presentDays])
+  }, [presentDays, data])
 
   // Function to calculate the grade based on present days
   const calculateGrade = (presentDays) => {
-    if (((presentDays/totalWorkingDays)*100) >= 90) return 'A';
-    if (((presentDays/totalWorkingDays)*100) >= 85) return 'B';
-    if (((presentDays/totalWorkingDays)*100) >= 80) return 'C';
-    if (((presentDays/totalWorkingDays)*100) >= 75) return 'D';
-    if (((presentDays/totalWorkingDays)*100) >=  1) return 'F';
-    // if (presentDays ===  0 && (absents || leaves || late)) return 'F';
+    if (((presentDays/totalWorkingDays)*100) < 75) return 'Short';
+    if (((presentDays/totalWorkingDays)*100) >= 75) return 'Okay';
     return 'None';
   };
 
@@ -134,14 +130,9 @@ export default function AdminViewRecords() {
   }, [user, selectedMonth, toDate]);
 
   const getGradeColor = (grade) => {
-    switch (grade) {
-      case 'A': return 'text-green-500';
-      case 'B': return 'text-blue-500';
-      case 'C': return 'text-purple-500';
-      case 'D': return 'text-yellow-500';
-      case 'F': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
+    if (grade === 'Short') return 'text-red-500';
+    if (grade === 'Okay') return 'text-green-500';
+    return 'text-gray-500'
   };
 
   // Function to download the table data as an Excel file
@@ -194,7 +185,6 @@ export default function AdminViewRecords() {
         }, 35000);
         throw result.error
       };
-      console.log("Attendance status saved:", result);
       
       // Update the local data
       const updatedData = data.map((row) => {
@@ -209,7 +199,16 @@ export default function AdminViewRecords() {
         }
         return row;
       });
-      console.log(updatedData)
+
+      const presentCount = updatedData?.filter((entry) => entry?.present)?.length;
+      const lateCount = updatedData?.filter((entry) => entry?.late)?.length;
+      const leaveCount = updatedData?.filter((entry) => entry?.leave)?.length;
+      const absentCount = updatedData?.filter((entry) => entry?.absent)?.length;
+
+      setPresents(presentCount);
+      setLate(lateCount);
+      setLeaves(leaveCount);
+      setAbsents(absentCount);
       setData(updatedData);
       setSelectedRow(null); // Close modal
     } catch (error) {
@@ -248,7 +247,7 @@ export default function AdminViewRecords() {
           </div> */}
           <div className="flex flex-col text-center bg-[#ecf0f1] w-full px-5 py-7">
             <h3 className={`text-2xl font-bold mb-2 ${getGradeColor(grade)}`}>{grade}</h3>
-            <p className="text-lg font-medium">Grade</p>
+            <p className="text-lg font-medium">Status</p>
           </div>
         </div>
       </div>
@@ -326,7 +325,6 @@ export default function AdminViewRecords() {
         <thead>
           <tr className="bg-gray-100 text-left text-gray-700">
             <th className="px-6 py-3 text-sm font-semibold">Date</th>
-            <th className="px-6 py-3 text-sm font-semibold">User</th>
             <th className="px-6 py-3 text-sm font-semibold">Present Days</th>
             <th className="px-6 py-3 text-sm font-semibold">Absent Days</th>
             <th className="px-6 py-3 text-sm font-semibold">Leave Days</th>
@@ -339,7 +337,6 @@ export default function AdminViewRecords() {
               return (
               <tr key={index}>
                 <td className="px-6 py-4 text-sm text-gray-700">{row?.date}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{user}</td>
                 <td className="px-6 py-4 text-sm">
                   <span
                     className={`w-5 h-5 border-2 rounded-md flex justify-center items-center ${row?.present ? "bg-green-500 text-white" : "border-gray-300"}`}
