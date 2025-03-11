@@ -134,7 +134,7 @@ const AttendancePortal = () => {
       <div className='flex flex-col items-center'>
         {qrCodeImage && (
           <div className=''>
-            <img src={qrCodeImage} alt="QR Code" width={700} />
+            <img src={qrCodeImage} alt="QR Code" width={400} />
             <p className='text-center'>{qrCodeData}</p>
           </div>
         )}
