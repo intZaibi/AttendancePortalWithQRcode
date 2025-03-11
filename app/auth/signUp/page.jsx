@@ -136,12 +136,3 @@ export default function SignUp() {
     </div>
   );
 }
-
-
-          // <div class=" items-center hidden">
-          //     <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 shrink-0 text-[#00cc88] focus:ring-[#00cc88] border-gray-300 rounded" />
-          //     <label for="remember-me" class="text-gray-800 ml-3 block text-sm">
-          //       I accept the <a href="javascript:void(0);" class="text-[#00cc88] font-semibold hover:underline ml-1">Terms and Conditions</a>
-          //     </label>
-          //   </div>
-          // </div>
