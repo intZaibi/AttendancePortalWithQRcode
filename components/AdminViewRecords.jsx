@@ -115,7 +115,7 @@ export default function AdminViewRecords() {
         setLate(lateCount);
         setLeaves(leaveCount);
         setAbsents(absentCount);
-
+        console.log("Presents:", presentDays, ", leaves:", ", absents:", absents, ", grade:", grade, ", late:", late, ", data:", data)
       }
     } catch (error) {
       alert("Error fetching attendance records:", error);
